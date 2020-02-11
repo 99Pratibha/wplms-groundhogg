@@ -53,6 +53,26 @@ class Wplms_Groundhogg{
 		$body = json_decode( wp_remote_retrieve_body( $response ));
 		return $body;
 	}
+	function get_tag_contact($tag_args){
+		/*{
+		"query":{
+			"tags_include" : 92
+		}
+		}*/
+		$emails = array();
+		$args = $this->args;
+		$args['method'] = 'GET';
+		$args['body'] = $tag_args;
+		$response = wp_remote_get($this->apiurl.'contacts',$args);
+		$body = json_decode( wp_remote_retrieve_body( $response ) );
+		if(!empty($body)){
+			foreach ($body->contacts as $contact) 
+			{
+				$emails[] = $contact->data->email;
+       		}
+			return $emails;
+		}
+	}
 
 	function create_tag($tag_args){
 		/*{
@@ -67,7 +87,6 @@ class Wplms_Groundhogg{
 		$args['body'] = json_encode($tag_args);
 		$response = wp_remote_post(  $this->apiurl.'tags', $args );
 		$body = json_decode( wp_remote_retrieve_body( $response ) );
-		//print_r($body);
 		if(!empty($body)){
 			foreach ($body as $key['tags']) {
 				foreach ($key['tags'] as $ids => $values) {
@@ -84,8 +103,8 @@ class Wplms_Groundhogg{
 		$args = $this->args;
 		$args['method'] = 'PUT';
 		/*
-				{
-		    "id_or_email":"1", mandatory field.
+		{
+		"id_or_email":"1", mandatory field.
 		    "tags" : [ 
 		        1, 
 		        2, 
@@ -105,7 +124,7 @@ class Wplms_Groundhogg{
 	function remove_tag($contact_args){
 
 		$args = $this->args;
-		$args['method'] = 'PUT';
+		$args['method'] = 'PATCH';
 		/*
 		{
 		    "id_or_email":"1", mandatory field.
@@ -119,26 +138,21 @@ class Wplms_Groundhogg{
 		}*/
 		$args['body'] = json_encode($contact_args);
 		$response = wp_remote_post(  $this->apiurl.'tags/remove',$args );
-		print_r($response);
 		$body = json_decode( wp_remote_retrieve_body( $response ) );
 		if(empty($body)){
 			return true;
 		}
 	}
 	
-	function get_all_tag($tag_id){
+	function get_all_tag($tag_name){
 
-		$response = wp_remote_get( $this->apiurl.'tags?select=true', $this->args );
+		$response = wp_remote_get( $this->apiurl.'tags?q='.$tag_name, $this->args );
 		$body = json_decode( wp_remote_retrieve_body( $response ),true );
 		$tags = array();
-		print_r($body);
-		if ( wp_remote_retrieve_response_code( $response ) == 200 ) {
-			foreach ($body['tags'] as $key => $value) {
-					$tags[] = array('tag_id'=>$key,'tag_name'=>$values);
-			}
+
+		foreach ($body['tags'] as $tag) {
+			 $tags[] = array('tag_id'=>$tag['tag_id'], 'tag_name'=>$tag['tag_name']);
 			return $tags;
-		}else {
-			echo '<b>' . wp_remote_retrieve_response_code( $response ) . wp_remote_retrieve_response_message( $response ) . ':</b> ' . $body->detail;
 		}
 	}
 
