@@ -120,118 +120,12 @@ class Wplms_Groundhogg_Admin{
 			}
 			jQuery(document).ready(function($){
 
-				$('.sync_tags').each(function(tag,i){
-					let val = $(this).parent().find('.sync_tag_selection').val();
-					if(!val || !val.length){
-						$(this).hide();
-					}
-				});
-				$('.sync_tag_selection').on('change',function(){
-					if($(this).val().length){
-						$(this).parent().find('.sync_tags').show();
-					}else{
-						$(this).parent().find('.sync_tags').hide();
-					}
-				});
-				$("body").on('click','.sync_tags',function(event){
-					event.preventDefault();
-					var $this = $(this);
-
-					if($this.hasClass('active')){return;}
-					$this.addClass('active');
-					$this.find('span').css('width','10%');
-					$.ajax({
-                      	type: 	"POST",
-                      	url: 	ajaxurl,
-                      	data: { action: 'sync_tags_get', //Fetches from 
-                              	security: $('#_wpnonce').val(),
-                              	tag:$('select[name="'+$this.attr('id')+'"]').val(),
-                            },
-                      	cache: false,
-                      	success:function(json){ 
-
-                      		$this.find('span').css('width','40%'); 
-                      		
-                      		$.ajax({
-		                      	type: 	"POST",
-		                      	url: 	ajaxurl,
-		                      	data: { action: 'sync_tags_put', 
-		                              	security: $('#_wpnonce').val(),
-		                              	emails:json,
-		                              	element:$this.attr('id'),
-		                              	tag:$('select[name="'+$this.attr('id')+'"]').val(),
-		                            },
-		                        cache: false,
-		                      	success: function (html) {
-		                      		if(isJson(html)){ 
-
-		                      			ajaxcalls = $.parseJSON(html);
-		                      			if(ajaxcalls.length){
-											var json = ajaxcalls[0];
-											var data = getData(json,0);
-											for (var i = 1; i < ajaxcalls.length; i++) {
-											    // Or only the last "i" will be used
-											    (function (i) {
-											        data = data.then(function() {
-											            return getData(ajaxcalls[i],i);
-											        });
-											    }(i));
-											}
-
-											// Also, see how better the getData can be.
-											function getData(json,key) {
-												console.log(key);
-												console.log(ajaxcalls.length);
-												console.log((key+1/ajaxcalls.length));
-											    return 	$.ajax({
-							                      	type: "POST",
-							                      	url: ajaxurl,
-							                      	data: json,
-							                      	success:function(j){
-
-							                      		var width = 40+(((key+1)/ajaxcalls.length)*60);
-							                      		console.log(width);
-
-							                      		if(width >=100){
-							                      			width = 99;
-							                      		}
-							                      		$this.find('span').css('width',width+'%');
-							                      		if((key+1) == ajaxcalls.length ){
-							                      			$this.find('span').css('width','100%');
-							                      			$this.find('span').text('Sync Complete');
-								                      		setTimeout(function(){
-								                      			$this.removeClass('active');$this.find('span').text('');
-								                      			$this.find('span').css('width','0%');
-								                      		},2000);
-							                      		}
-							                      	}
-						                      	}).done(function(d) {
-												        var response = d;
-												    }).fail(function() {
-												        alert('ERROR');
-												    });
-											}
-		                      			}
-		                      		}else{
-		                      			$this.find('span').css('width','100%');
-			                      		$this.find('span').text('Sync Complete');
-			                      		setTimeout(function(){
-			                      			$this.removeClass('active');$this.find('span').text('');
-			                      			$this.find('span').css('width','0%');
-			                      		},2000);
-		                      		}
-		                      	}
-	                      	}); 
-                		}
-					});
-				});
 				$('#sync_course_tags_now').on('click',function(event){
 					if(!$(this).hasClass('filled')){
 						event.preventDefault();
 						$('.language').toggle(200);
 						if(!$(this).hasClass('filled')){
 							$(this).addClass('filled button-primary');
-
 						}
 					}else{
 				
@@ -241,7 +135,8 @@ class Wplms_Groundhogg_Admin{
 					//var permission_reminder =$('input[name="permission_reminder"]').val();
 
 				    $this.addClass('active');
-					$this.find('span').css('width','10%');
+				    let width = 10;
+					$this.find('span').css('width',width+'%');
 					$.ajax({
                       	type: 	"POST",
                       	url: 	ajaxurl,
@@ -251,27 +146,34 @@ class Wplms_Groundhogg_Admin{
                             },
                       	cache: false,
                       	success:function(json){
-                      		$this.find('span').css('width','40%'); 
-	                      		$.ajax({
-			                      	type: 	"POST",
-			                      	url: 	ajaxurl,
-			                      	data: { action: 'course_tags_put', 
-			                              	security: $('#_wpnonce').val(),
-			                              	data:JSON.stringify(json),
-			                            },
-			                        cache: false,
-			                      	complete: function (html) {
-			                      		console.log('ye kya ho gya 1');
-			                      		$this.find('span').css('width','100%');
-			                      		$this.find('span').text('Sync Complete');
-			                      		setTimeout(function(){
-			                      			console.log('########3');
-
-			                      			$this.removeClass('active');$this.find('span').text('');
-			                      			$this.find('span').css('width','0%');
-			                      		},2000);
-			                      	}
-		                      	}); 
+                      		width = 40;
+                      		$this.find('span').css('width',width+'%'); 
+                      		if(Array.isArray(json)){
+                      			json.map(function(tag){
+                      				$.ajax({
+				                      	type: 	"POST",
+				                      	url: 	ajaxurl,
+				                      	data: { action: 'course_tags_put', 
+				                              	security: $('#_wpnonce').val(),
+				                              	tag:JSON.stringify(tag),
+				                            },
+				                        cache: false,
+				                      	complete: function (html) {
+				                      		width += Math.round(60/json.length);
+				                      		if(width> 100){width = 100;}
+				                      		$this.find('span').css('width',width+'%');
+				                      		if(width == 100){
+				                      			$this.find('span').text('Sync Complete');
+					                      		setTimeout(function(){
+					                      			$this.removeClass('active');
+					                      			$this.find('span').text('');
+					                      			$this.find('span').css('width','0%');
+					                      		},2000);
+				                      		}
+				                      	}
+			                      	}); 
+                      			});
+                      		}
                 		}
 					});
 				}
@@ -280,7 +182,6 @@ class Wplms_Groundhogg_Admin{
 			</script>
 			<?php
 	}
-
 	function generate_form($settings){
 		
 		foreach($settings as $setting ){
