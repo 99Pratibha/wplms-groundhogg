@@ -137,7 +137,7 @@ class Wplms_Groundhogg_Init{
 						else{
 							$id = array_search($course->post_name,$this->tags);
 							$tag_ids[]=array('tag_id'=>$id,'tag_name'=>$course->post_name);
-							update_post_meta($course->ID,'vibe_wplms_groundhogg_tag',$id);
+							//update_post_meta($course->ID,'vibe_wplms_groundhogg_tag',$id);
 						}
 					}
 				}
@@ -153,7 +153,7 @@ class Wplms_Groundhogg_Init{
 		     die();
 		}
 		$gr = new Wplms_Groundhogg($this->settings['groundhogg_api_key'],$this->settings['groundhogg_token']);
-		$data = JSON_decode(stripslashes($_POST['tag']));	
+		$data = JSON_decode(stripslashes($_POST['tag']));
 		if(!empty($data)){
 			$tag_ids = array();
 			$all_tags[$data->tag_id] = $data->tag_name;
@@ -205,6 +205,7 @@ class Wplms_Groundhogg_Init{
 							}
 							    $tobe_added_mails =  array_diff($all_course_user_emails,$all_tag_students);
 								$tobe_rejected_mails =  array_diff($all_tag_students, $all_course_user_emails);
+								
 							if(!empty($tobe_rejected_mails)){
 								foreach($tobe_rejected_mails as $contact){
 									$gr->remove_tag($tag_contact[$contact]);
