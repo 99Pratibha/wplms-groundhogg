@@ -149,30 +149,50 @@ class Wplms_Groundhogg_Admin{
                       		width = 40;
                       		$this.find('span').css('width',width+'%'); 
                       		if(Array.isArray(json)){
+                      			let ajaxcalls= [];
                       			json.map(function(tag){
-                      				$.ajax({
-				                      	type: 	"POST",
-				                      	url: 	ajaxurl,
-				                      	data: { action: 'course_tags_put', 
-				                              	security: $('#_wpnonce').val(),
-				                              	tag:JSON.stringify(tag),
-				                            },
-				                        cache: false,
-				                      	complete: function (html) {
+                      				ajaxcalls.push({ action: 'course_tags_put', 
+		                              	security: $('#_wpnonce').val(),
+		                              	tag:JSON.stringify(tag),
+		                            });
+                      			});
+                      			console.log(ajaxcalls);
+                      			var data = getData(ajaxcalls,0);
+								for (var i = 1; i < ajaxcalls.length; i++) {
+								    // Or only the last "i" will be used
+								    (function (i) {
+								        data = data.then(function() {
+								            return getData(ajaxcalls,i);
+								        });
+								    }(i));
+								}
+
+								// Also, see how better the getData can be.
+								function getData(json,key) {
+									return 	$.ajax({
+			                      	type: 	"POST",
+			                      	url: 	ajaxurl,
+			                      	data: json[key],
+			                        cache: false,
+			                      	success: function (html) {
 				                      		width += Math.round(60/json.length);
-				                      		if(width> 100){width = 100;}
+				                      		
 				                      		$this.find('span').css('width',width+'%');
 				                      		if(width == 100){
 				                      			$this.find('span').text('Sync Complete');
-					                      		setTimeout(function(){
-					                      			$this.removeClass('active');
-					                      			$this.find('span').text('');
-					                      			$this.find('span').css('width','0%');
-					                      		},2000);
+				                      			$this.removeClass('active');
+				                      			$this.find('span').text('');
+				                      			$this.find('span').css('width','0%');
+					                      		
 				                      		}
 				                      	}
-			                      	}); 
-                      			});
+			                      	}).done(function(d) {
+								        var response = d;
+								    }).fail(function() {
+								        alert('ERROR');
+								    });
+								}
+
                       		}
                 		}
 					});
@@ -221,6 +241,7 @@ class Wplms_Groundhogg_Admin{
 					echo '<th scope="row" class="titledesc"><label>'.$setting['label'].'</label></th>';
 					echo '<td class="forminp"><select class="sync_tag_selection" name="'.$setting['name'].'">
 					<option value="">'._x('Disable','disable switch in WPLMS Groundhogg settings','wplms-groundhogg').'</option>';
+					$this->init = Wplms_Groundhogg_Init::init();
 					$gr_tags = $this->init->get_tags();
 
 					foreach($gr_tags as $key=>$option){
