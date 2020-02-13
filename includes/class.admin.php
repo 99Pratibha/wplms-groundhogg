@@ -175,15 +175,13 @@ class Wplms_Groundhogg_Admin{
 			                      	data: json[key],
 			                        cache: false,
 			                      	success: function (html) {
-				                      		width += Math.round(60/json.length);
-				                      		
+				                      		width += Math.round(50/json.length);
 				                      		$this.find('span').css('width',width+'%');
 				                      		if(width == 100){
 				                      			$this.find('span').text('Sync Complete');
 				                      			$this.removeClass('active');
 				                      			$this.find('span').text('');
 				                      			$this.find('span').css('width','0%');
-					                      		
 				                      		}
 				                      	}
 			                      	}).done(function(d) {

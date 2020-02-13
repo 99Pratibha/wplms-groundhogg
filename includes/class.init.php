@@ -85,6 +85,7 @@ class Wplms_Groundhogg_Init{
 		}
 		return $this->tags;
 	}
+	
 	function get_create_course_tags(){
 
 		if ( !isset($_POST['security']) || !wp_verify_nonce($_POST['security'],'wplms_groundhogg_settings') ){
